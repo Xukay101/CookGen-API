@@ -10,4 +10,6 @@ class Settings(BaseSettings):
         extra='ignore'
     )
 
+    DATABASE_URI: str
+
 settings = Settings()
