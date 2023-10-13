@@ -3,7 +3,9 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.config import settings 
 
-engine = create_async_engine(settings.DATABASE_URI, echo=True, future=True, pool_pre_ping=True)
+DATABASE_URI = f'mysql+asyncmy://{settings.DATABASE_USER}:{settings.DATABASE_PASS}@{settings.DATABASE_HOST}:{settings.DATABASE_PORT}/{settings.DATABASE_NAME}'
+
+engine = create_async_engine(DATABASE_URI, echo=True, future=True, pool_pre_ping=True)
 
 AsyncSessionLocal = sessionmaker(
     bind=engine, class_=AsyncSession, expire_on_commit=False
@@ -17,8 +19,3 @@ async def get_db():
         yield db
     finally:
         await db.close()
-
-async def init_db():
-    from app.models import User
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
