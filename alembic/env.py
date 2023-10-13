@@ -13,7 +13,8 @@ from app.config import settings
 config = context.config
 
 # Set database URI
-config.set_main_option('sqlalchemy.url', settings.DATABASE_URI)
+DATABASE_URI = f'mysql+asyncmy://{settings.DATABASE_USER}:{settings.DATABASE_PASS}@{settings.DATABASE_HOST}:{settings.DATABASE_PORT}/{settings.DATABASE_NAME}'
+config.set_main_option('sqlalchemy.url', DATABASE_URI)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
