@@ -1,3 +1,5 @@
+import redis.asyncio as redis
+
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -13,9 +15,13 @@ AsyncSessionLocal = sessionmaker(
 
 Base = declarative_base()
 
-async def get_db():
+async def get_db() -> AsyncSession:
     db = AsyncSessionLocal()
     try:
         yield db
     finally:
         await db.close()
+
+async def get_redis():
+    redis_url = f"redis://:{settings.REDIS_PASS}@{settings.REDIS_HOST}:{settings.REDIS_PORT}"
+    return redis.from_url(redis_url)

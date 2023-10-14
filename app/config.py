@@ -16,4 +16,12 @@ class Settings(BaseSettings):
     DATABASE_USER: str
     DATABASE_PASS: str
 
+    JWT_SECRET_KEY: str # openssl rand -hex 32
+    JWT_ALGORITHM: str = 'HS256'
+    JWT_EXPIRE_MINUTES: int = 30
+
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_PASS: str
+
 settings = Settings()
