@@ -21,6 +21,7 @@ services:
       DATABASE_USER: cookgen
       DATABASE_PASS: cookgen
       DATABASE_NAME: cookgen
+      JWT_SECRET_KEY: Kx489P0XezHhihVk1lRUcuovtKo55P3OLawPqVyBSbc3
     ports:
       - '8000:8000'
     depends_on:

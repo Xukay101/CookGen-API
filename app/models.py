@@ -1,5 +1,5 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Sequence
-from sqlalchemy.ext.declarative import declarative_base
+# Global models
+from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 
 from app.database import Base
@@ -11,7 +11,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     full_name = Column(String(100))
-    hashed_password = Column(String(100), nullable=False)
+    password = Column(String(100), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

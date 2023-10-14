@@ -13,7 +13,7 @@ AsyncSessionLocal = sessionmaker(
 
 Base = declarative_base()
 
-async def get_db():
+async def get_db() -> AsyncSession:
     db = AsyncSessionLocal()
     try:
         yield db
