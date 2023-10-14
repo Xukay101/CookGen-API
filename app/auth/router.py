@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
@@ -7,9 +9,9 @@ from app.schemas import UserBase, UserCreate
 from app.database import get_db
 from app.models import User
 from app.utils import model_to_dict
-from app.auth.utils import get_hashed_password, verify_password, create_access_token
-from app.auth.schemas import Token
-from app.auth.dependencies import get_current_user
+from app.auth.utils import get_hashed_password, verify_password, create_access_token, revoke_token
+from app.auth.schemas import Token, TokenPayload
+from app.auth.dependencies import get_current_user, get_token_payload, oauth2_scheme
 
 router = APIRouter(prefix='/auth', tags=['auth'], responses={404: {"description": "Not found"}})
 
@@ -56,3 +58,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
 @router.get("/verify", status_code=200)
 async def verify_token(current_user: int = Depends(get_current_user)):
     return {"status": "Token is valid", "user_id": current_user.id}
+
+@router.post("/logout", status_code=200)
+async def logout(payload: TokenPayload = Depends(get_token_payload), token: str = Depends(oauth2_scheme)):
+    now = datetime.now(timezone.utc)
+    expires_in = payload.exp - int(now.timestamp())
+
+    if expires_in <= 0:
+        raise HTTPException(status_code=400, detail="Token is already expired")
+
+    await revoke_token(token, expires_in)
+    return {"detail": "Token has been revoked"}
