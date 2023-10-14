@@ -12,6 +12,14 @@ services:
       - '3306:3306'
     volumes:
       - mysql-data:/var/lib/mysql
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes: 
+      - cache:/data
   api:
     build: ./
     container_name: CookGen
@@ -22,10 +30,16 @@ services:
       DATABASE_PASS: cookgen
       DATABASE_NAME: cookgen
       JWT_SECRET_KEY: Kx489P0XezHhihVk1lRUcuovtKo55P3OLawPqVyBSbc3
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      REDIS_PASS: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     ports:
       - '8000:8000'
     depends_on:
       - database
+      - cache
 
 volumes:
   mysql-data:
+  cache:
+    driver: local
