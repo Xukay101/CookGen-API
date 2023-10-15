@@ -1,6 +1,6 @@
-.PHONY: migrate upgrade docker-migrate docker-upgrade
+.PHONY: migrate upgrade docker-migrate docker-upgrade docker-init-data build
 
-# Migraciones sin Docker Compose
+# Migrations 
 
 migrate:
 	alembic revision --autogenerate -m "Update database"
@@ -8,10 +8,22 @@ migrate:
 upgrade:
 	alembic upgrade head
 
-# Migraciones con Docker Compose
+# Migrations Docker Compose
 
 docker-migrate:
 	docker-compose run api alembic revision --autogenerate -m "Update database through Docker"
 
 docker-upgrade:
 	docker-compose run api alembic upgrade head
+
+# Init Data
+
+docker-init-data:
+	docker-compose run api python -m app.init_data
+
+# Build
+
+build:
+	docker-compose up --build -d
+	make docker-upgrade
+	make docker-init-data
