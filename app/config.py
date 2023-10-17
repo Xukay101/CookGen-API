@@ -10,6 +10,8 @@ class Settings(BaseSettings):
         extra='ignore'
     )
 
+    BASE_URL: str
+
     DATABASE_HOST: str
     DATABASE_PORT: str
     DATABASE_NAME: str

@@ -28,6 +28,8 @@ class Recipe(Base):
     author_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     instructions = Column(Text, nullable=False)
     image_name = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     author = relationship('User', back_populates='recipes')
 
