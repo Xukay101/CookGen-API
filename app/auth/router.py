@@ -5,17 +5,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import UserBase, UserCreate
+from app.schemas import UserCreate, UserRead
 from app.database import get_db
 from app.models import User
-from app.utils import model_to_dict
 from app.auth.utils import get_hashed_password, verify_password, create_access_token, revoke_token
 from app.auth.schemas import Token, TokenPayload
 from app.auth.dependencies import get_current_user, get_token_payload, oauth2_scheme
 
 router = APIRouter(prefix='/auth', tags=['auth'], responses={404: {"description": "Not found"}})
 
-@router.post('/register', status_code=201, response_model=UserBase)
+@router.post('/register', status_code=201, response_model=UserRead)
 async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     # Check if username or email already exists
     query = select(User).filter((User.username == user.username) | (User.email == user.email))
@@ -35,7 +34,7 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(new_user)
 
-    return model_to_dict(new_user) 
+    return new_user 
 
 @router.post('/login', status_code=200, response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
