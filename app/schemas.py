@@ -37,7 +37,7 @@ class RecipeCreate(RecipeBase):
 class RecipeRead(RecipeBase):
     id: int
     author_id: int
-    image_url: HttpUrl | None = None
+    image_name: str | None = None
     created_at: datetime | None
     updated_at: datetime | None
 
@@ -47,3 +47,7 @@ class RecipeUpdate(BaseModel):
     instructions: str | None = None
     image_name: str | None = None
     author_id: int | None = None
+
+class RecipeImage(BaseModel):
+    id: int
+    image_url: HttpUrl | None = None
