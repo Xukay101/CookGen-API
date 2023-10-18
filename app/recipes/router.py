@@ -2,11 +2,13 @@ import os
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi_pagination.links import Page
+from fastapi_pagination.ext.async_sqlalchemy import paginate 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Recipe, User
-from app.schemas import RecipeCreate, RecipeRead, RecipeImage
+from app.schemas import RecipeCreate, RecipeRead, RecipeImage, RecipeUpdate
 from app.database import get_db
 from app.config import settings
 from app.auth.dependencies import get_current_user
@@ -40,7 +42,7 @@ async def get_recipe_image(recipe: Recipe = Depends(get_recipe_by_id)):
     image_url = f'{settings.BASE_URL}static/images/{recipe.image_name}.{saved_file_extension}'
     return {"id": recipe.id, "image_url": image_url}
 
-@router.post('/{id}/image', status_code=201, response_model=RecipeRead)
+@router.patch('/{id}/image', status_code=201, response_model=RecipeRead, description="Upload/Update image")
 async def update_image(
     image_file: UploadFile,
     recipe: Recipe = Depends(get_recipe_by_id),
@@ -74,6 +76,48 @@ async def update_image(
 
     return recipe
 
+@router.get('/', status_code=200, response_model=Page[RecipeRead])
+async def get_recipes(db: AsyncSession = Depends(get_db)):
+    data = await paginate(db, select(Recipe).order_by(Recipe.created_at))
+    return data
+
 @router.get('/{id}', status_code=200, response_model=RecipeRead)
-async def get_recipe(recipe: Recipe = Depends(get_recipe_by_id), db: AsyncSession = Depends(get_db)):
+async def get_recipe(recipe: Recipe = Depends(get_recipe_by_id)):
     return recipe
+
+@router.put('/{id}', status_code=200, response_model=RecipeRead)
+async def update_recipe(
+    recipe_data: RecipeUpdate,
+    recipe: Recipe = Depends(get_recipe_by_id),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Check owner
+    if not recipe.author_id == current_user.id:
+        raise HTTPException(403, 'Not authorized to modify this recipe')
+
+    for field, value in recipe_data.model_dump().items():
+        if value is not None:
+            setattr(recipe, field, value)
+
+    await db.commit()
+    await db.refresh(recipe)
+
+    return recipe
+
+
+@router.put('/{id}', status_code=204)
+async def delete_recipe(
+    recipe: Recipe = Depends(get_recipe_by_id),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Check owner
+    if not recipe.author_id == current_user.id:
+        raise HTTPException(403, 'Not authorized to modify this recipe')
+
+    await db.delete(recipe)
+    await db.commit(recipe)
+
+    return
+

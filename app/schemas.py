@@ -45,7 +45,6 @@ class RecipeUpdate(BaseModel):
     title: str | None = None
     ingredients: str | None = None
     instructions: str | None = None
-    image_name: str | None = None
     author_id: int | None = None
 
 class RecipeImage(BaseModel):

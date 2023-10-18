@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi_pagination import add_pagination
 
 from app.config import settings
 from app.auth.router import router as auth_router
@@ -18,3 +19,6 @@ app.include_router(recipes_router)
 @app.get('/', tags=['root'])
 async def root():
     return {'message': f'Welcome to {settings.APP_NAME}'}
+
+# Add pagination
+add_pagination(app)
