@@ -25,5 +25,6 @@ docker-init-data:
 
 build:
 	docker-compose up --build -d
+	sleep 10
 	make docker-upgrade
 	make docker-init-data

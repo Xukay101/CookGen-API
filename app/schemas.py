@@ -14,10 +14,12 @@ class IngredientCreate(IngredientBase):
 
 class IngredientRead(IngredientBase):
     id: int
+    author_id: int
 
 class IngredientUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+    author_id: int | None = None
 
 # Recipe Schemas
 class RecipeBase(BaseModel):

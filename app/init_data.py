@@ -18,7 +18,8 @@ async def load_ingredients_from_csv(session, csv_path):
     for _, row in df.iterrows():
         ingredient = Ingredient(
             name=row['name'],
-            description=row['description']
+            description=row['description'],
+            author_id=1
         )
         session.add(ingredient)
     await session.commit()

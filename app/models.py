@@ -22,6 +22,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     recipes = relationship('Recipe', back_populates='author')
+    ingredients = relationship('Ingredient', back_populates='author')
 
     def __repr__(self):
         return f'<User(id={self.id}, username={self.username}, email={self.email}, full_name={self.full_name})>'
@@ -32,7 +33,9 @@ class Ingredient(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False, unique=True)
     description = Column(Text, nullable=True)
+    author_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
+    author = relationship('User', back_populates='ingredients')
     recipes = relationship('Recipe', secondary=recipe_ingredient_association, back_populates='ingredients')
 
     def __repr__(self):
