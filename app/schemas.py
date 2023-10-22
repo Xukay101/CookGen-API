@@ -22,7 +22,7 @@ class IngredientUpdate(BaseModel):
 # Recipe Schemas
 class RecipeBase(BaseModel):
     title: str
-    ingredients: List[IngredientBase]  # Lista de ingredientes
+    ingredients: List[int]  # Lista de ingredientes
     instructions: str
 
 class RecipeCreate(RecipeBase):
@@ -31,13 +31,14 @@ class RecipeCreate(RecipeBase):
 class RecipeRead(RecipeBase):
     id: int
     author_id: int
+    ingredients: List[IngredientRead]  # Lista de ingredientes
     image_name: str | None = None
     created_at: datetime | None
     updated_at: datetime | None
 
 class RecipeUpdate(BaseModel):
     title: str | None = None
-    ingredients: List[IngredientUpdate] | None = None
+    ingredients: List[int] | None = None
     instructions: str | None = None
     author_id: int | None = None
 
@@ -59,7 +60,6 @@ class UserRead(UserBase):
     password: str
     created_at: datetime
     updated_at: datetime
-    recipes: List[RecipeBase] = []
 
 class UserUpdate(BaseModel):
     username: str | None = None
