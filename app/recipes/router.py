@@ -3,11 +3,12 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi_pagination.links import Page
-from fastapi_pagination.ext.async_sqlalchemy import paginate 
+from fastapi_pagination.ext.async_sqlalchemy import paginate
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Recipe, User
+from app.models import Recipe, User, Ingredient
 from app.schemas import RecipeCreate, RecipeRead, RecipeImage, RecipeUpdate
 from app.database import get_db
 from app.config import settings
@@ -23,15 +24,27 @@ async def create_recipe(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # Verify if ingredients exist
+    result = await db.execute(select(Ingredient).filter(Ingredient.id.in_(recipe.ingredients)))
+    ingredients = result.scalars().all()
+
+    if len(ingredients) != len(recipe.ingredients):
+        raise HTTPException(status_code=400, detail="Some ingredient IDs are invalid")
+
     # New recipe instance
-    new_recipe = Recipe(**recipe.model_dump())
+    recipe_dict = recipe.model_dump()
+    recipe_dict.pop('ingredients', None)
+    new_recipe = Recipe(**recipe_dict)
 
     # Add author_id
     new_recipe.author_id = current_user.id
+    new_recipe.ingredients = ingredients
 
     db.add(new_recipe)
     await db.commit()
-    await db.refresh(new_recipe)
+
+    result = await db.execute(select(Recipe).options(joinedload(Recipe.ingredients)).filter_by(id=new_recipe.id))
+    new_recipe = result.scalar()
 
     return new_recipe 
 
@@ -72,14 +85,17 @@ async def update_image(
 
     recipe.image_name = str(unique_filename)
     await db.commit()
-    await db.refresh(recipe)
+
+    result = await db.execute(select(Recipe).options(joinedload(Recipe.ingredients)).filter_by(id=recipe.id))
+    recipe = result.scalar()
 
     return recipe
 
 @router.get('/', status_code=200, response_model=Page[RecipeRead])
 async def get_recipes(db: AsyncSession = Depends(get_db)):
-    data = await paginate(db, select(Recipe).order_by(Recipe.created_at))
+    data = await paginate(db, select(Recipe).options(joinedload(Recipe.ingredients)).order_by(Recipe.created_at))
     return data
+
 
 @router.get('/{id}', status_code=200, response_model=RecipeRead)
 async def get_recipe(recipe: Recipe = Depends(get_recipe_by_id)):
@@ -101,7 +117,9 @@ async def update_recipe(
             setattr(recipe, field, value)
 
     await db.commit()
-    await db.refresh(recipe)
+
+    result = await db.execute(select(Recipe).options(joinedload(Recipe.ingredients)).filter_by(id=recipe.id))
+    recipe = result.scalar()
 
     return recipe
 

@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import engine, Base
-from app.models import User, Recipe
+from app.models import User, Ingredient
 from app.auth.utils import get_hashed_password
 
 async def init_admin_user(session):
@@ -9,22 +9,18 @@ async def init_admin_user(session):
     session.add(admin)
     await session.commit()
 
-async def load_recipes_from_csv(session, csv_path):
+async def load_ingredients_from_csv(session, csv_path):
     df = pd.read_csv(csv_path, encoding='utf8')
 
-    df['title'] = df['title'].astype(str).apply(lambda x: x.encode('utf-8'))
-    df['ingredients'] = df['ingredients'].astype(str).apply(lambda x: x.encode('utf-8'))
-    df['instructions'] = df['instructions'].astype(str).apply(lambda x: x.encode('utf-8'))
+    df['name'] = df['name'].astype(str).apply(lambda x: x.encode('utf-8'))
+    df['description'] = df['description'].astype(str).apply(lambda x: x.encode('utf-8'))
 
     for _, row in df.iterrows():
-        recipe = Recipe(
-            title=row['title'],
-            ingredients=row['ingredients'],
-            author_id=row['author_id'],
-            instructions=row['instructions'],
-            image_name=row['image_name']
+        ingredient = Ingredient(
+            name=row['name'],
+            description=row['description']
         )
-        session.add(recipe)
+        session.add(ingredient)
     await session.commit()
 
 async def main():
@@ -35,7 +31,7 @@ async def main():
     async with AsyncSession(engine) as session:
         await init_admin_user(session)
 
-        await load_recipes_from_csv(session, 'app/static/recipes.csv')
+        await load_ingredients_from_csv(session, 'app/static/ingredients.csv')
 
 if __name__ == "__main__":
     import asyncio
