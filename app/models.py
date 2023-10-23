@@ -1,5 +1,5 @@
 # Global models
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Table
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Table, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -58,6 +58,8 @@ class Recipe(Base):
     image_name = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    low_carb = Column(Boolean, default=False)
+    gluten_free = Column(Boolean, default=False)
 
     author = relationship('User', back_populates='recipes')
     ingredients = relationship('Ingredient', secondary=recipe_ingredient_association, back_populates='recipes')

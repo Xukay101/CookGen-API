@@ -18,6 +18,38 @@ from app.recipes.dependencies import get_recipe_by_id
 
 router = APIRouter(prefix='/recipes', tags=['recipes'], responses={404: {'description': 'Not found'}})
 
+@router.get('/search-by-preferences', status_code=200, response_model=Page[RecipeRead])
+async def search_by_preferences(
+    gluten_free: bool = False, 
+    low_carb: bool = False, 
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await db.refresh(current_user, attribute_names=['preferences'])
+
+    # Building query based in preferences
+    liked_ingredients = [p.ingredient_id for p in current_user.preferences if p.preference_type == 'like']
+    disliked_ingredients = [p.ingredient_id for p in current_user.preferences if p.preference_type in ['dislike', 'allergy']]
+
+    # # Get liked ingredients
+    query = select(Recipe).where(
+        Recipe.ingredients.any(Ingredient.id.in_(liked_ingredients))
+    )
+
+    # # Exclude disliked ingredients
+    query = query.where(
+        ~Recipe.ingredients.any(Ingredient.id.in_(disliked_ingredients))
+    )
+
+    # # Check if gluten free and low carb
+    if gluten_free:
+        query = query.where(Recipe.gluten_free == True)
+    if low_carb:
+        query = query.where(Recipe.low_carb == True)
+
+    data = await paginate(db, query)
+    return data
+
 @router.post('/', status_code=201, response_model=RecipeRead)
 async def create_recipe(
     recipe: RecipeCreate,
