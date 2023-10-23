@@ -124,7 +124,7 @@ async def update_recipe(
     return recipe
 
 
-@router.put('/{id}', status_code=204)
+@router.delete('/{id}', status_code=204)
 async def delete_recipe(
     recipe: Recipe = Depends(get_recipe_by_id),
     db: AsyncSession = Depends(get_db),
@@ -132,10 +132,9 @@ async def delete_recipe(
 ):
     # Check owner
     if not recipe.author_id == current_user.id:
-        raise HTTPException(403, 'Not authorized to modify this recipe')
+        raise HTTPException(403, 'Not authorized to delete this recipe')
 
     await db.delete(recipe)
-    await db.commit(recipe)
+    await db.commit()
 
     return
-

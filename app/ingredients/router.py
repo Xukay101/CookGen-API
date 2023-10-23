@@ -61,7 +61,7 @@ async def update_ingredient(
 
     return ingredient
 
-@router.put('/{id}', status_code=204)
+@router.delete('/{id}', status_code=204)
 async def delete_ingredient(
     ingredient: Ingredient = Depends(get_ingredient_by_id),
     db: AsyncSession = Depends(get_db),

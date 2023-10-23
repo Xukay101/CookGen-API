@@ -59,7 +59,6 @@ class UserCreate(UserBase):
 
 class UserRead(UserBase):
     id: int
-    password: str
     created_at: datetime
     updated_at: datetime
 
