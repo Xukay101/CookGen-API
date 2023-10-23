@@ -6,6 +6,7 @@ from app.config import settings
 from app.auth.router import router as auth_router
 from app.recipes.router import router as recipes_router
 from app.ingredients.router import router as ingredients_router
+from app.users.router import router as users_router
 
 app = FastAPI()
 
@@ -16,6 +17,7 @@ app.mount('/static', StaticFiles(directory='app/static'), name='static')
 app.include_router(auth_router)
 app.include_router(recipes_router)
 app.include_router(ingredients_router)
+app.include_router(users_router)
 
 # Root Endpoint
 @app.get('/', tags=['root'])

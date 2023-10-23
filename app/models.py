@@ -10,6 +10,11 @@ recipe_ingredient_association = Table('recipe_ingredient', Base.metadata,
     Column('ingredient_id', Integer, ForeignKey('ingredients.id'))
 )
 
+user_saved_recipes = Table('user_saved_recipes', Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('recipe_id', Integer, ForeignKey('recipes.id'))
+)
+
 class User(Base):
     __tablename__ = 'users'
 
@@ -23,6 +28,8 @@ class User(Base):
 
     recipes = relationship('Recipe', back_populates='author')
     ingredients = relationship('Ingredient', back_populates='author')
+    preferences = relationship('UserPreference', back_populates='user')
+    saved_recipes = relationship('Recipe', secondary=user_saved_recipes, back_populates='saved_by_users')
 
     def __repr__(self):
         return f'<User(id={self.id}, username={self.username}, email={self.email}, full_name={self.full_name})>'
@@ -54,6 +61,18 @@ class Recipe(Base):
 
     author = relationship('User', back_populates='recipes')
     ingredients = relationship('Ingredient', secondary=recipe_ingredient_association, back_populates='recipes')
+    saved_by_users = relationship('User', secondary=user_saved_recipes, back_populates='saved_recipes')
 
     def __repr__(self):
         return f'<Recipe(id={self.id}, title={self.title}, author_id={self.author_id})>'
+
+class UserPreference(Base):
+    __tablename__ = 'user_preferences'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    preference_type = Column(String(50), nullable=False)  # 'allergy', 'like', 'dislike'
+    ingredient_id = Column(Integer, ForeignKey('ingredients.id'), nullable=False)
+
+    user = relationship('User', back_populates='preferences')
+    ingredient = relationship('Ingredient')
