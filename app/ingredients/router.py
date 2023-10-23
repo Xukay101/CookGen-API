@@ -11,7 +11,7 @@ from app.schemas import IngredientRead, IngredientCreate, IngredientUpdate
 from app.ingredients.dependencies import get_ingredient_by_id
 from app.auth.dependencies import get_current_user
 
-router = APIRouter(prefix='/ingredients', tags=['ingredients'], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix='/ingredients', tags=['ingredients'], responses={404: {'description': 'Not found'}})
 
 @router.get('/', status_code=200, response_model=Page[IngredientRead])
 async def get_ingredients(db: AsyncSession = Depends(get_db)):

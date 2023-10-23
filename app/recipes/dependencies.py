@@ -10,5 +10,5 @@ async def get_recipe_by_id(id: int, db: AsyncSession = Depends(get_db)) -> Recip
     result = await db.execute(select(Recipe).options(joinedload(Recipe.ingredients)).filter_by(id=id))
     recipe = result.scalars().first()
     if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+        raise HTTPException(status_code=404, detail='Recipe not found')
     return recipe

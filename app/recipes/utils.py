@@ -10,4 +10,4 @@ def get_file_extension(directory: str, filename_without_extension: str) -> str:
     for file in os.listdir(directory):
         if file.startswith(filename_without_extension):
             return file.split('.')[-1]
-    return ""
+    return ''

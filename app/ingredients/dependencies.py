@@ -10,5 +10,5 @@ async def get_ingredient_by_id(id: int, db: AsyncSession = Depends(get_db)) -> I
     result = await db.execute(select(Ingredient).options(joinedload(Ingredient.recipes)).filter_by(id=id))
     ingredient = result.scalars().first()
     if not ingredient:
-        raise HTTPException(status_code=404, detail="Ingredient not found")
+        raise HTTPException(status_code=404, detail='Ingredient not found')
     return ingredient
