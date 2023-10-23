@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import Ingredient, User
-from app.schemas import IngredientRead, IngredientCreate
+from app.schemas import IngredientRead, IngredientCreate, IngredientUpdate
 from app.ingredients.dependencies import get_ingredient_by_id
 from app.auth.dependencies import get_current_user
 
@@ -39,3 +39,40 @@ async def create_ingredient(
     await db.refresh(new_ingredient)
 
     return new_ingredient
+
+@router.put('/{id}', status_code=200, response_model=IngredientRead)
+async def update_ingredient(
+    ingredient_data: IngredientUpdate,
+    ingredient: Ingredient = Depends(get_ingredient_by_id),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Check if is owner
+    if not ingredient.author_id == current_user.id:
+        raise HTTPException(403, 'Not authorized to modify this ingredient')
+
+    # Update ingredients values
+    for field, value in ingredient_data.model_dump().items():
+        if value is not None:
+            setattr(ingredient, field, value)
+
+    await db.commit()
+    await db.refresh(ingredient)
+
+    return ingredient
+
+@router.put('/{id}', status_code=204)
+async def delete_ingredient(
+    ingredient: Ingredient = Depends(get_ingredient_by_id),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Check if is owner
+    if not ingredient.author_id == current_user.id:
+        raise HTTPException(403, 'Not authorized to delete this ingredient')
+
+    await db.delete(ingredient)
+    await db.commit()
+
+    return
+
