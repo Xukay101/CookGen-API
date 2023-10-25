@@ -15,3 +15,6 @@ class UserPreferenceRead(UserPreferenceBase):
 class UserPreferenceUpdate(BaseModel):
     preference_type: PreferenceType | None = None
     ingredient_id: int | None = None
+
+class SavedRecipe(BaseModel):
+    recipe_id: int
