@@ -14,16 +14,20 @@ class IngredientCreate(IngredientBase):
 
 class IngredientRead(IngredientBase):
     id: int
+    author_id: int
 
 class IngredientUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+    author_id: int | None = None
 
 # Recipe Schemas
 class RecipeBase(BaseModel):
     title: str
     ingredients: List[int]  # Lista de ingredientes
     instructions: str
+    low_carb: bool = False
+    gluten_free: bool = False
 
 class RecipeCreate(RecipeBase):
     pass
@@ -41,6 +45,8 @@ class RecipeUpdate(BaseModel):
     ingredients: List[int] | None = None
     instructions: str | None = None
     author_id: int | None = None
+    low_carb: bool | None = None
+    gluten_free: bool | None = None 
 
 class RecipeImage(BaseModel):
     id: int
@@ -57,7 +63,6 @@ class UserCreate(UserBase):
 
 class UserRead(UserBase):
     id: int
-    password: str
     created_at: datetime
     updated_at: datetime
 

@@ -16,7 +16,39 @@ from app.auth.dependencies import get_current_user
 from app.recipes.utils import get_file_extension, delete_image_from_directory
 from app.recipes.dependencies import get_recipe_by_id
 
-router = APIRouter(prefix='/recipes', tags=['recipes'], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix='/recipes', tags=['recipes'], responses={404: {'description': 'Not found'}})
+
+@router.get('/search-by-preferences', status_code=200, response_model=Page[RecipeRead])
+async def search_by_preferences(
+    gluten_free: bool = False, 
+    low_carb: bool = False, 
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await db.refresh(current_user, attribute_names=['preferences'])
+
+    # Building query based in preferences
+    liked_ingredients = [p.ingredient_id for p in current_user.preferences if p.preference_type == 'like']
+    disliked_ingredients = [p.ingredient_id for p in current_user.preferences if p.preference_type in ['dislike', 'allergy']]
+
+    # # Get liked ingredients
+    query = select(Recipe).where(
+        Recipe.ingredients.any(Ingredient.id.in_(liked_ingredients))
+    )
+
+    # # Exclude disliked ingredients
+    query = query.where(
+        ~Recipe.ingredients.any(Ingredient.id.in_(disliked_ingredients))
+    )
+
+    # # Check if gluten free and low carb
+    if gluten_free:
+        query = query.where(Recipe.gluten_free == True)
+    if low_carb:
+        query = query.where(Recipe.low_carb == True)
+
+    data = await paginate(db, query)
+    return data
 
 @router.post('/', status_code=201, response_model=RecipeRead)
 async def create_recipe(
@@ -29,7 +61,7 @@ async def create_recipe(
     ingredients = result.scalars().all()
 
     if len(ingredients) != len(recipe.ingredients):
-        raise HTTPException(status_code=400, detail="Some ingredient IDs are invalid")
+        raise HTTPException(status_code=400, detail='Some ingredient IDs are invalid')
 
     # New recipe instance
     recipe_dict = recipe.model_dump()
@@ -53,9 +85,9 @@ async def get_recipe_image(recipe: Recipe = Depends(get_recipe_by_id)):
     image_directory = os.path.join('app', 'static', 'images')
     saved_file_extension = get_file_extension(image_directory, recipe.image_name)
     image_url = f'{settings.BASE_URL}static/images/{recipe.image_name}.{saved_file_extension}'
-    return {"id": recipe.id, "image_url": image_url}
+    return {'id': recipe.id, 'image_url': image_url}
 
-@router.patch('/{id}/image', status_code=201, response_model=RecipeRead, description="Upload/Update image")
+@router.patch('/{id}/image', status_code=201, response_model=RecipeRead, description='Upload/Update image')
 async def update_image(
     image_file: UploadFile,
     recipe: Recipe = Depends(get_recipe_by_id),
@@ -86,8 +118,7 @@ async def update_image(
     recipe.image_name = str(unique_filename)
     await db.commit()
 
-    result = await db.execute(select(Recipe).options(joinedload(Recipe.ingredients)).filter_by(id=recipe.id))
-    recipe = result.scalar()
+    await db.refresh(recipe, attribute_names=['ingredients'])
 
     return recipe
 
@@ -118,13 +149,12 @@ async def update_recipe(
 
     await db.commit()
 
-    result = await db.execute(select(Recipe).options(joinedload(Recipe.ingredients)).filter_by(id=recipe.id))
-    recipe = result.scalar()
+    await db.refresh(recipe, attribute_names=['ingredients'])
 
     return recipe
 
 
-@router.put('/{id}', status_code=204)
+@router.delete('/{id}', status_code=204)
 async def delete_recipe(
     recipe: Recipe = Depends(get_recipe_by_id),
     db: AsyncSession = Depends(get_db),
@@ -132,10 +162,9 @@ async def delete_recipe(
 ):
     # Check owner
     if not recipe.author_id == current_user.id:
-        raise HTTPException(403, 'Not authorized to modify this recipe')
+        raise HTTPException(403, 'Not authorized to delete this recipe')
 
     await db.delete(recipe)
-    await db.commit(recipe)
+    await db.commit()
 
     return
-
