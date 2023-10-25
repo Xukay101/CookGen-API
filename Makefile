@@ -1,4 +1,4 @@
-.PHONY: migrate upgrade docker-migrate docker-upgrade docker-init-data build
+.PHONY: migrate upgrade docker-migrate docker-upgrade docker-init-data build tests
 
 # Migrations 
 
@@ -28,3 +28,7 @@ build:
 	sleep 10
 	make docker-upgrade
 	make docker-init-data
+
+# Tests
+tests:
+	docker-compose exec api pytest .
